@@ -19,7 +19,10 @@ void AMovingPlatform::BeginPlay()
 	Super::BeginPlay();
 	StartLocation = GetActorLocation();
 	
-	UE_LOG(LogTemp, Display, TEXT("Your message"));
+	FString MyString = "Peter";
+	
+	UE_LOG(LogTemp, Display, TEXT("Hello boys I am: %s"), *MyString);
+	UE_LOG(LogTemp, Display, TEXT("But my real name is: %s"), *Name);
 }
 
 // Called every frame
@@ -27,6 +30,14 @@ void AMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// YES YES YES using Ticks, I am just learning...(Part of a lecture)
+
+	MovePlatform(DeltaTime);
+}
+
+
+void AMovingPlatform::MovePlatform(float DeltaTime)
+{
 	FVector CurrentLocation = GetActorLocation();
 
 	CurrentLocation = CurrentLocation + PlatformVelocity * DeltaTime;
@@ -38,10 +49,19 @@ void AMovingPlatform::Tick(float DeltaTime)
 	//reverse direction
 	if(DistanceMoved > MovedMaxDistance)
 	{
-		FVector MoveDirection = PlatformVelocity.GetSafeNormal();
-		StartLocation = StartLocation + MoveDirection * MovedMaxDistance;
-		SetActorLocation(StartLocation);
-		PlatformVelocity = -PlatformVelocity;
+		float OverShoot = DistanceMoved - MovedMaxDistance;
+		UE_LOG(LogTemp, Display, TEXT("Platform %s overshot by %f, Distance Moved: %f, MaxDistance: %f"), *Name, OverShoot, DistanceMoved, MovedMaxDistance)
+
+		RotatePlatform();
 	}
 }
 
+void AMovingPlatform::RotatePlatform()
+{
+	FVector MoveDirection = PlatformVelocity.GetSafeNormal();
+	UE_LOG(LogTemp, Display, TEXT("Safe Normal for Platform: %s XYZ are: %ls"), *Name, *MoveDirection.ToString())
+	
+	StartLocation = StartLocation + MoveDirection * MovedMaxDistance;
+	SetActorLocation(StartLocation);
+	PlatformVelocity = -PlatformVelocity;
+}
