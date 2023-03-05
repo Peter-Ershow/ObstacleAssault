@@ -8,9 +8,8 @@
 // Sets default values
 AMovingPlatform::AMovingPlatform()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
@@ -18,9 +17,9 @@ void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
 	StartLocation = GetActorLocation();
-	
+
 	FString MyString = "Peter";
-	
+
 	UE_LOG(LogTemp, Display, TEXT("Hello boys I am: %s"), *MyString);
 	UE_LOG(LogTemp, Display, TEXT("But my real name is: %s"), *Name);
 }
@@ -33,35 +32,41 @@ void AMovingPlatform::Tick(float DeltaTime)
 	// YES YES YES using Ticks, I am just learning...(Part of a lecture)
 
 	MovePlatform(DeltaTime);
+	RotatePlatform(DeltaTime);
 }
 
 
 void AMovingPlatform::MovePlatform(float DeltaTime)
 {
-	FVector CurrentLocation = GetActorLocation();
-
-	CurrentLocation = CurrentLocation + PlatformVelocity * DeltaTime;
-
-	SetActorLocation(CurrentLocation);
-
-	float DistanceMoved = FVector::Dist(StartLocation, CurrentLocation);
-
-	//reverse direction
-	if(DistanceMoved > MovedMaxDistance)
+	if (ShouldPlatformReturn())
 	{
-		float OverShoot = DistanceMoved - MovedMaxDistance;
-		UE_LOG(LogTemp, Display, TEXT("Platform %s overshot by %f, Distance Moved: %f, MaxDistance: %f"), *Name, OverShoot, DistanceMoved, MovedMaxDistance)
-
-		RotatePlatform();
+		FVector MoveDirection = PlatformVelocity.GetSafeNormal();
+		UE_LOG(LogTemp, Display, TEXT("Safe Normal for Platform: %s XYZ are: %ls"), *Name, *MoveDirection.ToString())
+		StartLocation = StartLocation + MoveDirection * MoveDistance;
+		SetActorLocation(StartLocation);
+		PlatformVelocity = -PlatformVelocity;
+	}
+	else
+	{
+		FVector CurrentLocation = GetActorLocation();
+		CurrentLocation = CurrentLocation + (PlatformVelocity * DeltaTime);
+		SetActorLocation(CurrentLocation);
 	}
 }
 
-void AMovingPlatform::RotatePlatform()
+void AMovingPlatform::RotatePlatform(float DeltaTime)
 {
-	FVector MoveDirection = PlatformVelocity.GetSafeNormal();
-	UE_LOG(LogTemp, Display, TEXT("Safe Normal for Platform: %s XYZ are: %ls"), *Name, *MoveDirection.ToString())
-	
-	StartLocation = StartLocation + MoveDirection * MovedMaxDistance;
-	SetActorLocation(StartLocation);
-	PlatformVelocity = -PlatformVelocity;
+	FRotator CurrentRotation = GetActorRotation();
+	CurrentRotation = CurrentRotation + RotationVelocity * DeltaTime;
+	SetActorRotation(CurrentRotation);
+}
+
+bool AMovingPlatform::ShouldPlatformReturn() const
+{
+	return GetDistanceMoved() > MoveDistance;
+}
+
+float AMovingPlatform::GetDistanceMoved() const
+{
+	return FVector::Dist(StartLocation, GetActorLocation());
 }
